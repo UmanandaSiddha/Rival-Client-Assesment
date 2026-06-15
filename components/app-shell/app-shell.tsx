@@ -10,10 +10,12 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { RealtimeProvider } from '@/components/realtime-provider';
 import { useTeams } from '@/lib/store/team';
 import { TeamSwitcher } from './team-switcher';
 import { Nav } from './nav';
 import { UserMenu } from './user-menu';
+import { PresenceIndicator } from './presence-indicator';
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     return (
@@ -29,6 +31,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
     const fetchTeams = useTeams((s) => s.fetchTeams);
+    const currentTeamId = useTeams((s) => s.currentTeamId);
     const [mobileOpen, setMobileOpen] = useState(false);
 
     useEffect(() => {
@@ -65,12 +68,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     </Sheet>
 
                     <div className="flex-1" />
+                    <PresenceIndicator />
                     <ThemeToggle />
                     <UserMenu />
                 </header>
 
                 <main className="min-w-0 flex-1">{children}</main>
             </div>
+
+            <RealtimeProvider teamId={currentTeamId} />
         </div>
     );
 }

@@ -14,9 +14,13 @@ The backend (NestJS) lives in a separate repository; this app talks to it over R
 ## Features
 
 - Email auth (sign up, sign in, OTP verify) with the session persisted across refresh
-- Task **board** and **list** views, with status filter, title search, sort (due/priority/created/updated), and pagination
-- Create / edit / delete tasks, mark complete, assign to a member
-- **Real-time**: tasks update live across clients; presence shows who's online
+- Task **board** (drag-and-drop between statuses) and **list** views, with status filter, title
+  search, sort (due/priority/created/updated), and pagination
+- Create / edit / delete tasks, mark complete, assign to a member — with **optimistic UI** (instant
+  update + rollback on failure)
+- **Per-task activity history** (who changed what, when) in the task dialog
+- **Real-time**: tasks update live across clients; presence shows who's online; when someone opens a
+  task it's outlined as "X is editing", with their **keystrokes streamed live** (one editor at a time)
 - Teams: members, role assignment, email invites (+ public accept page), create team
 - Admin: manage users (role, enable/disable), browse all teams and tasks
 - Dark mode (persisted), responsive layout, and loading / empty / error states throughout

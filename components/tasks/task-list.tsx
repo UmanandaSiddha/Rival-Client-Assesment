@@ -5,6 +5,7 @@ import {
     PencilSimple,
     Trash,
     CalendarBlank,
+    PencilLine,
 } from '@phosphor-icons/react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +25,9 @@ import {
     formatDate,
     isOverdue,
 } from '@/lib/task-ui';
+import { useAuth } from '@/lib/store/auth';
+import { useEditing } from '@/lib/store/editing';
+import { fullName } from '@/lib/task-ui';
 import type { Task, TaskStatus } from '@/lib/types';
 import type { MemberInfo } from './task-card';
 
@@ -48,6 +52,9 @@ export function TaskList({
     onDelete,
     onToggleComplete,
 }: Props) {
+    const me = useAuth((s) => s.user?.id);
+    const locks = useEditing((s) => s.locks);
+
     return (
         <div className="overflow-x-auto rounded-lg border">
             <table className="w-full text-sm">
@@ -71,6 +78,8 @@ export function TaskList({
                         const assignee = task.assigneeId
                             ? members[task.assigneeId]
                             : undefined;
+                        const lock = locks[task.id];
+                        const editedByOther = Boolean(lock && lock.userId !== me);
                         return (
                             <tr
                                 key={task.id}
@@ -94,6 +103,15 @@ export function TaskList({
                                     >
                                         {task.title}
                                     </button>
+                                    {editedByOther && (
+                                        <span
+                                            className="ml-2 inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400"
+                                            title={`${fullName(lock.firstName, lock.lastName, 'Someone')} is editing`}
+                                        >
+                                            <PencilLine className="size-3.5" />
+                                            editing
+                                        </span>
+                                    )}
                                 </td>
                                 <td className="p-3">
                                     <Badge

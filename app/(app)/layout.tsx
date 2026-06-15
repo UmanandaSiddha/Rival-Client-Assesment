@@ -4,8 +4,8 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { CircleNotch } from '@phosphor-icons/react';
 import { useAuth } from '@/lib/store/auth';
+import { AppShell } from '@/components/app-shell/app-shell';
 
-// Guards every /(app) route. The full shell (sidebar/topbar) is layered in here later.
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const status = useAuth((s) => s.status);
@@ -27,5 +27,5 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         );
     }
 
-    return <>{children}</>;
+    return <AppShell>{children}</AppShell>;
 }

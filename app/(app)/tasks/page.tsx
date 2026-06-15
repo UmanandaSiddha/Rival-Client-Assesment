@@ -78,10 +78,13 @@ export default function TasksPage() {
     }
 
     async function patchTask(task: Task, patch: Record<string, unknown>) {
+        // Optimistic: apply locally now, reconcile with the server result, roll back on failure.
+        upsert({ ...task, ...patch } as Task);
         try {
             const updated = await api.patch<Task>(`/tasks/${task.id}`, patch);
             upsert(updated);
         } catch (err) {
+            upsert(task);
             toast.error(err instanceof ApiError ? err.message : 'Update failed');
         }
     }

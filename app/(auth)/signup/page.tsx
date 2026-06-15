@@ -21,6 +21,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { api, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/store/auth';
+import { getNextParam, useNextSuffix } from '@/lib/redirect';
 import type { User } from '@/lib/types';
 
 const schema = z.object({
@@ -34,6 +35,7 @@ type Values = z.infer<typeof schema>;
 export default function SignupPage() {
     const router = useRouter();
     const setUser = useAuth((s) => s.setUser);
+    const nextSuffix = useNextSuffix();
     const [submitting, setSubmitting] = useState(false);
     const {
         register,
@@ -47,7 +49,7 @@ export default function SignupPage() {
             const res = await api.post<{ data: User }>('/auth/sign-up', values);
             setUser(res.data);
             toast.success('Account created — verify your email to continue');
-            router.replace('/verify');
+            router.replace(`/verify?next=${encodeURIComponent(getNextParam())}`);
         } catch (err) {
             toast.error(
                 err instanceof ApiError ? err.message : 'Sign up failed',
@@ -122,7 +124,10 @@ export default function SignupPage() {
                     </Button>
                     <p className="text-center text-sm text-muted-foreground">
                         Already have an account?{' '}
-                        <Link href="/login" className="text-foreground underline">
+                        <Link
+                            href={`/login${nextSuffix}`}
+                            className="text-foreground underline"
+                        >
                             Sign in
                         </Link>
                     </p>

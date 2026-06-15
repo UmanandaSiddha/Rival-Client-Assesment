@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/store/auth';
+import { getNextParam } from '@/lib/redirect';
 
 export default function AuthLayout({
     children,
@@ -13,10 +14,10 @@ export default function AuthLayout({
     const status = useAuth((s) => s.status);
     const user = useAuth((s) => s.user);
 
-    // Already signed in and verified → no reason to be on an auth page.
+    // Already signed in and verified → go where we were headed (or the app).
     useEffect(() => {
         if (status === 'authenticated' && user?.isVerified) {
-            router.replace('/tasks');
+            router.replace(getNextParam());
         }
     }, [status, user, router]);
 

@@ -20,6 +20,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { api, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/store/auth';
+import { getNextParam } from '@/lib/redirect';
 import type { User } from '@/lib/types';
 
 const schema = z.object({
@@ -42,7 +43,8 @@ export default function VerifyPage() {
     // Need a session to verify against; if there's none, go sign in.
     useEffect(() => {
         if (status === 'unauthenticated') router.replace('/login');
-        if (status === 'authenticated' && user?.isVerified) router.replace('/tasks');
+        if (status === 'authenticated' && user?.isVerified)
+            router.replace(getNextParam());
     }, [status, user, router]);
 
     async function onSubmit(values: Values) {
@@ -55,7 +57,7 @@ export default function VerifyPage() {
             });
             setUser(res.data);
             toast.success('Verified!');
-            router.replace('/tasks');
+            router.replace(getNextParam());
         } catch (err) {
             toast.error(
                 err instanceof ApiError ? err.message : 'Verification failed',

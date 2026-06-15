@@ -30,6 +30,7 @@ interface InvitePreview {
 
 export default function InvitePage() {
     const token = useParams().token as string;
+    const nextParam = encodeURIComponent(`/invite/${token}`);
     const router = useRouter();
     const status = useAuth((s) => s.status);
     const user = useAuth((s) => s.user);
@@ -140,14 +141,18 @@ export default function InvitePage() {
                                         Sign in as {invite.email} to accept.
                                     </p>
                                     <Button asChild className="w-full">
-                                        <Link href="/login">Sign in</Link>
+                                        <Link href={`/login?next=${nextParam}`}>
+                                            Sign in
+                                        </Link>
                                     </Button>
                                     <Button
                                         asChild
                                         variant="outline"
                                         className="w-full"
                                     >
-                                        <Link href="/signup">Create account</Link>
+                                        <Link href={`/signup?next=${nextParam}`}>
+                                            Create account
+                                        </Link>
                                     </Button>
                                 </>
                             )}

@@ -21,6 +21,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { api, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/store/auth';
+import { getNextParam, useNextSuffix } from '@/lib/redirect';
 import type { User } from '@/lib/types';
 
 const schema = z.object({
@@ -32,6 +33,7 @@ type Values = z.infer<typeof schema>;
 export default function LoginPage() {
     const router = useRouter();
     const setUser = useAuth((s) => s.setUser);
+    const nextSuffix = useNextSuffix();
     const [submitting, setSubmitting] = useState(false);
     const {
         register,
@@ -44,7 +46,12 @@ export default function LoginPage() {
         try {
             const res = await api.post<{ data: User }>('/auth/sign-in', values);
             setUser(res.data);
-            router.replace(res.data.isVerified ? '/tasks' : '/verify');
+            const next = getNextParam();
+            router.replace(
+                res.data.isVerified
+                    ? next
+                    : `/verify?next=${encodeURIComponent(next)}`,
+            );
         } catch (err) {
             toast.error(
                 err instanceof ApiError ? err.message : 'Sign in failed',
@@ -103,7 +110,10 @@ export default function LoginPage() {
                     </Button>
                     <p className="text-center text-sm text-muted-foreground">
                         No account?{' '}
-                        <Link href="/signup" className="text-foreground underline">
+                        <Link
+                            href={`/signup${nextSuffix}`}
+                            className="text-foreground underline"
+                        >
                             Sign up
                         </Link>
                     </p>

@@ -36,7 +36,13 @@ interface TaskState {
     fetch: () => Promise<void>;
     upsert: (task: Task) => void;
     removeLocal: (id: string) => void;
+    // Authoritative summary from the attachments panel (acting user).
+    setAttachmentSummary: (id: string, count: number, previews: string[]) => void;
+    // Relative nudge from realtime events (other users).
+    bumpAttachment: (id: string, delta: number, previewUrl?: string | null) => void;
 }
+
+const MAX_PREVIEWS = 3;
 
 export const useTasks = create<TaskState>((set, get) => ({
     teamId: null,
@@ -95,12 +101,38 @@ export const useTasks = create<TaskState>((set, get) => ({
             if (s.teamId && task.teamId !== s.teamId) return s;
             const exists = s.tasks.some((t) => t.id === task.id);
             return {
+                // Merge so a write/realtime task payload (which omits the attachment summary)
+                // doesn't wipe the thumbnails already on the card.
                 tasks: exists
-                    ? s.tasks.map((t) => (t.id === task.id ? task : t))
+                    ? s.tasks.map((t) => (t.id === task.id ? { ...t, ...task } : t))
                     : [task, ...s.tasks],
             };
         }),
 
     removeLocal: (id) =>
         set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) })),
+
+    setAttachmentSummary: (id, count, previews) =>
+        set((s) => ({
+            tasks: s.tasks.map((t) =>
+                t.id === id
+                    ? { ...t, attachmentCount: count, attachmentPreviews: previews }
+                    : t,
+            ),
+        })),
+
+    bumpAttachment: (id, delta, previewUrl) =>
+        set((s) => ({
+            tasks: s.tasks.map((t) => {
+                if (t.id !== id) return t;
+                const count = Math.max(0, (t.attachmentCount ?? 0) + delta);
+                let previews = t.attachmentPreviews ?? [];
+                if (delta > 0 && previewUrl) {
+                    previews = [previewUrl, ...previews].slice(0, MAX_PREVIEWS);
+                } else if (delta < 0) {
+                    previews = previews.slice(0, count); // never show more thumbs than exist
+                }
+                return { ...t, attachmentCount: count, attachmentPreviews: previews };
+            }),
+        })),
 }));

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
     ArrowSquareOut,
@@ -15,6 +15,7 @@ import { api, ApiError, assetUrl } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTasks } from '@/lib/store/tasks';
 import type { TaskAttachment } from '@/lib/types';
 
 function formatSize(bytes?: number | null): string {
@@ -40,15 +41,31 @@ export function TaskAttachments({ taskId, open, readOnly }: Props) {
     const [linkUrl, setLinkUrl] = useState('');
     const [addingLink, setAddingLink] = useState(false);
     const fileInput = useRef<HTMLInputElement>(null);
+    const setAttachmentSummary = useTasks((s) => s.setAttachmentSummary);
+
+    // Keep the card's thumbnails/count in sync with the authoritative list.
+    const pushSummary = useCallback(
+        (list: TaskAttachment[]) => {
+            const previews = list
+                .map((a) => a.previewUrl)
+                .filter((u): u is string => Boolean(u))
+                .slice(0, 3);
+            setAttachmentSummary(taskId, list.length, previews);
+        },
+        [setAttachmentSummary, taskId],
+    );
 
     useEffect(() => {
         if (!open) return;
         setLoading(true);
         api.get<TaskAttachment[]>(`/tasks/${taskId}/attachments`)
-            .then(setItems)
+            .then((list) => {
+                setItems(list);
+                pushSummary(list);
+            })
             .catch(() => setItems([]))
             .finally(() => setLoading(false));
-    }, [taskId, open]);
+    }, [taskId, open, pushSummary]);
 
     async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
@@ -62,7 +79,9 @@ export function TaskAttachments({ taskId, open, readOnly }: Props) {
                 `/tasks/${taskId}/attachments/file`,
                 form,
             );
-            setItems((prev) => [added, ...prev]);
+            const next = [added, ...items];
+            setItems(next);
+            pushSummary(next);
         } catch (err) {
             toast.error(err instanceof ApiError ? err.message : 'Upload failed');
         } finally {
@@ -80,7 +99,9 @@ export function TaskAttachments({ taskId, open, readOnly }: Props) {
                 `/tasks/${taskId}/attachments/link`,
                 { url },
             );
-            setItems((prev) => [added, ...prev]);
+            const next = [added, ...items];
+            setItems(next);
+            pushSummary(next);
             setLinkUrl('');
         } catch (err) {
             toast.error(err instanceof ApiError ? err.message : 'Could not add link');
@@ -91,11 +112,14 @@ export function TaskAttachments({ taskId, open, readOnly }: Props) {
 
     async function onRemove(id: string) {
         const prev = items;
-        setItems((list) => list.filter((a) => a.id !== id)); // optimistic
+        const next = items.filter((a) => a.id !== id);
+        setItems(next); // optimistic
+        pushSummary(next);
         try {
             await api.delete(`/tasks/${taskId}/attachments/${id}`);
         } catch (err) {
             setItems(prev); // rollback
+            pushSummary(prev);
             toast.error(err instanceof ApiError ? err.message : 'Delete failed');
         }
     }

@@ -6,6 +6,7 @@ import {
     Trash,
     CalendarBlank,
     ArrowRight,
+    Paperclip,
 } from '@phosphor-icons/react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +19,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { PencilLine } from '@phosphor-icons/react';
+import { assetUrl } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import {
     PRIORITY_BADGE,
@@ -56,6 +58,8 @@ export function TaskCard({
 }: Props) {
     const done = task.status === 'DONE';
     const overdue = isOverdue(task.dueDate, task.status);
+    const attachmentCount = task.attachmentCount ?? 0;
+    const previews = task.attachmentPreviews ?? [];
 
     const me = useAuth((s) => s.user?.id);
     const lock = useEditing((s) => s.locks[task.id]);
@@ -153,6 +157,31 @@ export function TaskCard({
                     </Avatar>
                 )}
             </div>
+
+            {attachmentCount > 0 && (
+                <div className="mt-2 flex items-center gap-2">
+                    {previews.length > 0 && (
+                        <div className="flex -space-x-1.5">
+                            {previews.slice(0, 3).map((p, idx) => (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                    key={idx}
+                                    src={assetUrl(p)}
+                                    alt=""
+                                    className="size-6 rounded border border-background object-cover"
+                                />
+                            ))}
+                        </div>
+                    )}
+                    <span
+                        className="inline-flex items-center gap-1 text-xs text-muted-foreground"
+                        title={`${attachmentCount} attachment${attachmentCount === 1 ? '' : 's'}`}
+                    >
+                        <Paperclip className="size-3.5" />
+                        {attachmentCount}
+                    </span>
+                </div>
+            )}
         </div>
     );
 }

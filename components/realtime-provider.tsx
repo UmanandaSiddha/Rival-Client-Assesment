@@ -5,7 +5,8 @@ import { API_URL } from '@/lib/api';
 import { useTasks } from '@/lib/store/tasks';
 import { usePresence } from '@/lib/store/presence';
 import { useEditing, type EditLock } from '@/lib/store/editing';
-import type { Task } from '@/lib/types';
+import { useAuth } from '@/lib/store/auth';
+import type { Task, TaskAttachment } from '@/lib/types';
 
 interface RealtimeEvent {
     type: string;
@@ -18,6 +19,7 @@ interface RealtimeEvent {
         holder?: EditLock;
         title?: string;
         description?: string;
+        attachment?: TaskAttachment;
     };
 }
 
@@ -31,6 +33,7 @@ interface RealtimeEvent {
 export function RealtimeProvider({ teamId }: { teamId: string | null }) {
     const upsert = useTasks((s) => s.upsert);
     const removeLocal = useTasks((s) => s.removeLocal);
+    const bumpAttachment = useTasks((s) => s.bumpAttachment);
     const setSnapshot = usePresence((s) => s.setSnapshot);
     const addPresence = usePresence((s) => s.add);
     const removePresence = usePresence((s) => s.remove);
@@ -64,6 +67,25 @@ export function RealtimeProvider({ teamId }: { teamId: string | null }) {
                     break;
                 case 'task.deleted':
                     if (evt.payload?.taskId) removeLocal(evt.payload.taskId);
+                    break;
+                // Skip our own events — the attachments panel already synced the exact summary.
+                case 'task.attachment_added':
+                    if (
+                        evt.payload?.taskId &&
+                        evt.actorId !== useAuth.getState().user?.id
+                    )
+                        bumpAttachment(
+                            evt.payload.taskId,
+                            1,
+                            evt.payload.attachment?.previewUrl,
+                        );
+                    break;
+                case 'task.attachment_removed':
+                    if (
+                        evt.payload?.taskId &&
+                        evt.actorId !== useAuth.getState().user?.id
+                    )
+                        bumpAttachment(evt.payload.taskId, -1);
                     break;
                 case 'presence.snapshot':
                     setSnapshot(evt.payload?.onlineUserIds ?? []);

@@ -99,6 +99,9 @@ export interface Task {
     version: number;
     createdAt: string;
     updatedAt: string;
+    // Lightweight attachment summary from the list endpoint (for card thumbnails).
+    attachmentCount?: number;
+    attachmentPreviews?: string[];
 }
 
 export interface TaskActivity {

@@ -4,6 +4,16 @@
 export const API_URL =
     process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
 
+// The server's origin (no /api/v1) — uploaded files are served from /uploads/** there.
+const API_ORIGIN = API_URL.replace(/\/api\/v\d+\/?$/, '');
+
+// Resolve a stored attachment/preview URL: absolute links pass through; server-relative
+// paths (e.g. /uploads/...) get the API origin prepended.
+export function assetUrl(path?: string | null): string {
+    if (!path) return '';
+    return /^https?:\/\//i.test(path) ? path : `${API_ORIGIN}${path}`;
+}
+
 export class ApiError extends Error {
     status: number;
     constructor(status: number, message: string) {

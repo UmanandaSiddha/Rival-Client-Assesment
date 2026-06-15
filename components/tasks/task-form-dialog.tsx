@@ -38,6 +38,7 @@ import { api, ApiError } from '@/lib/api';
 import { fullName, formatDate } from '@/lib/task-ui';
 import { useEditing, type EditLock } from '@/lib/store/editing';
 import { TaskActivityFeed } from './task-activity-feed';
+import { TaskAttachments } from './task-attachments';
 import type { Task } from '@/lib/types';
 
 interface TeamMemberLite {
@@ -402,10 +403,18 @@ export function TaskFormDialog({ open, onOpenChange, teamId, task, onSaved }: Pr
                     <Tabs defaultValue="details">
                         <TabsList>
                             <TabsTrigger value="details">Details</TabsTrigger>
+                            <TabsTrigger value="attachments">Attachments</TabsTrigger>
                             <TabsTrigger value="activity">Activity</TabsTrigger>
                         </TabsList>
                         <TabsContent value="details" className="mt-4">
                             {detailsForm}
+                        </TabsContent>
+                        <TabsContent value="attachments" className="mt-4">
+                            <TaskAttachments
+                                taskId={task.id}
+                                open={open}
+                                readOnly={readOnly}
+                            />
                         </TabsContent>
                         <TabsContent value="activity" className="mt-4">
                             <TaskActivityFeed taskId={task.id} open={open} />

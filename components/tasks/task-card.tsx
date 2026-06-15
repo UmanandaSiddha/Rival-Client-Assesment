@@ -17,6 +17,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { PencilLine } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import {
     PRIORITY_BADGE,
@@ -24,8 +25,11 @@ import {
     STATUS_LABELS,
     STATUS_ORDER,
     formatDate,
+    fullName,
     isOverdue,
 } from '@/lib/task-ui';
+import { useAuth } from '@/lib/store/auth';
+import { useEditing } from '@/lib/store/editing';
 import type { Task, TaskStatus } from '@/lib/types';
 
 export interface MemberInfo {
@@ -53,8 +57,30 @@ export function TaskCard({
     const done = task.status === 'DONE';
     const overdue = isOverdue(task.dueDate, task.status);
 
+    const me = useAuth((s) => s.user?.id);
+    const lock = useEditing((s) => s.locks[task.id]);
+    const liveDraft = useEditing((s) => s.drafts[task.id]);
+    const editedByOther = Boolean(lock && lock.userId !== me);
+    const editorName = lock ? fullName(lock.firstName, lock.lastName, 'Someone') : '';
+    // While another user edits, show their live (unsaved) title.
+    const title =
+        editedByOther && liveDraft?.title !== undefined && liveDraft.title !== ''
+            ? liveDraft.title
+            : task.title;
+
     return (
-        <div className="group rounded-lg border bg-card p-3 shadow-xs transition-colors hover:border-foreground/20">
+        <div
+            className={cn(
+                'group rounded-lg border bg-card p-3 shadow-xs transition-colors hover:border-foreground/20',
+                editedByOther && 'ring-2 ring-amber-400/70',
+            )}
+        >
+            {editedByOther && (
+                <div className="mb-2 inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
+                    <PencilLine className="size-3.5" />
+                    {editorName} is editing…
+                </div>
+            )}
             <div className="flex items-start gap-2">
                 <Checkbox
                     checked={done}
@@ -69,7 +95,7 @@ export function TaskCard({
                         done && 'text-muted-foreground line-through',
                     )}
                 >
-                    {task.title}
+                    {title}
                 </button>
                 <DropdownMenu>
                     <DropdownMenuTrigger className="text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 data-[state=open]:opacity-100">

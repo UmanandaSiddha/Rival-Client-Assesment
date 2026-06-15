@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { API_URL } from '@/lib/api';
 import { useTasks } from '@/lib/store/tasks';
 import { usePresence } from '@/lib/store/presence';
+import { useEditing, type EditLock } from '@/lib/store/editing';
 import type { Task } from '@/lib/types';
 
 interface RealtimeEvent {
@@ -14,6 +15,9 @@ interface RealtimeEvent {
         task?: Task;
         taskId?: string;
         onlineUserIds?: string[];
+        holder?: EditLock;
+        title?: string;
+        description?: string;
     };
 }
 
@@ -31,10 +35,15 @@ export function RealtimeProvider({ teamId }: { teamId: string | null }) {
     const addPresence = usePresence((s) => s.add);
     const removePresence = usePresence((s) => s.remove);
     const resetPresence = usePresence((s) => s.reset);
+    const setLock = useEditing((s) => s.setLock);
+    const clearLock = useEditing((s) => s.clearLock);
+    const setDraft = useEditing((s) => s.setDraft);
+    const resetEditing = useEditing((s) => s.reset);
 
     useEffect(() => {
         if (!teamId) return;
         resetPresence();
+        resetEditing();
 
         let closed = false;
         let retry = 0;
@@ -64,6 +73,20 @@ export function RealtimeProvider({ teamId }: { teamId: string | null }) {
                     break;
                 case 'presence.offline':
                     if (evt.actorId) removePresence(evt.actorId);
+                    break;
+                case 'task.edit_locked':
+                    if (evt.payload?.taskId && evt.payload.holder)
+                        setLock(evt.payload.taskId, evt.payload.holder);
+                    break;
+                case 'task.edit_unlocked':
+                    if (evt.payload?.taskId) clearLock(evt.payload.taskId);
+                    break;
+                case 'task.draft':
+                    if (evt.payload?.taskId)
+                        setDraft(evt.payload.taskId, {
+                            title: evt.payload.title,
+                            description: evt.payload.description,
+                        });
                     break;
             }
         };

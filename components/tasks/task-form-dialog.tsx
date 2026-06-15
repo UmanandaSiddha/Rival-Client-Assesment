@@ -433,9 +433,9 @@ export function TaskFormDialog({ open, onOpenChange, teamId, task, onSaved }: Pr
                         Cancel
                     </Button>
                     <Button
-                        type="submit"
-                        form="task-form"
+                        type="button"
                         disabled={submitting || readOnly}
+                        onClick={handleSubmit(onSubmit)}
                     >
                         {submitting && <CircleNotch className="animate-spin" />}
                         {editing ? 'Save changes' : 'Create task'}

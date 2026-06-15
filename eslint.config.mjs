@@ -5,6 +5,14 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    rules: {
+      // We fetch in effects (no query library by choice); this pattern is intentional.
+      "react-hooks/set-state-in-effect": "off",
+      // False positive on react-hook-form's watch() return value.
+      "react-hooks/incompatible-library": "off",
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

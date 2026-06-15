@@ -18,6 +18,7 @@ import { api, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/store/auth';
 import { useTeams } from '@/lib/store/team';
 import { fullName } from '@/lib/task-ui';
+import type { Team } from '@/lib/types';
 
 interface InvitePreview {
     email: string;
@@ -49,12 +50,14 @@ export default function InvitePage() {
     async function respond(action: 'accept' | 'decline') {
         setWorking(true);
         try {
-            await api.post(`/invites/${token}/${action}`);
             if (action === 'accept') {
+                const team = await api.post<Team>(`/invites/${token}/accept`);
                 await fetchTeams();
+                setCurrentTeam(team.id);
                 toast.success(`Joined ${invite?.teamName ?? 'the team'}`);
                 router.replace('/tasks');
             } else {
+                await api.post(`/invites/${token}/decline`);
                 toast.success('Invite declined');
                 router.replace('/tasks');
             }

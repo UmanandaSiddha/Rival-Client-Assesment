@@ -52,6 +52,16 @@ export interface Team {
     createdAt?: string;
 }
 
+export interface TeamAccess {
+    isOwner: boolean;
+    hasAll: boolean;
+    permissions: Permission[];
+}
+
+export interface TeamDetail extends Team {
+    access: TeamAccess;
+}
+
 export interface Role {
     id: string;
     teamId: string | null;

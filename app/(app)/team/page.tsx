@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { CreateTeamDialog } from '@/components/team/create-team-dialog';
 import { MembersTab } from '@/components/team/members-tab';
 import { InvitesTab } from '@/components/team/invites-tab';
+import { RolesTab } from '@/components/team/roles-tab';
 import type { Invite, Role, TeamDetail, TeamMember } from '@/lib/types';
 
 export default function TeamPage() {
@@ -88,6 +89,7 @@ export default function TeamPage() {
                     <TabsList>
                         <TabsTrigger value="members">Members</TabsTrigger>
                         <TabsTrigger value="invites">Invites</TabsTrigger>
+                        <TabsTrigger value="roles">Roles</TabsTrigger>
                     </TabsList>
                     <TabsContent value="members" className="mt-4">
                         <MembersTab
@@ -102,6 +104,14 @@ export default function TeamPage() {
                         <InvitesTab
                             teamId={currentTeamId}
                             invites={invites}
+                            roles={roles}
+                            access={detail?.access}
+                            onChanged={load}
+                        />
+                    </TabsContent>
+                    <TabsContent value="roles" className="mt-4">
+                        <RolesTab
+                            teamId={currentTeamId}
                             roles={roles}
                             access={detail?.access}
                             onChanged={load}
